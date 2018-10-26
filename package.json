@@ -1,0 +1,15 @@
+{
+  "name": "curling_game_socket.io",
+  "version": "0.0.0",
+  "description": "A simple curling game using socket.io",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "medifle",
+  "license": "ISC",
+  "dependencies": {
+    "ecstatic": "^3.3.0",
+    "socket.io": "^2.1.1"
+  }
+}

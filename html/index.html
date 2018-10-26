@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+  <title>curling with socket.io</title>
+  <!-- <script src="jquery-1.11.3.js"></script> -->
+
+  <style>
+    body {
+      background: #fff;
+      margin: 2px;
+    }
+
+    /*element selectors: */
+    canvas {
+      display: block;
+      margin: auto;
+      /*important here for padding to be 0 for mouse calculations */
+      padding: 0px;
+    }
+
+    .canvas {
+      background: #ffffff;
+      /* border: thin outset #aaaaaa; */
+    }
+
+  </style>
+</head>
+
+<body>
+  <canvas id='canvas1' class='canvas' width='752' height='560'>
+    Canvas not supported
+  </canvas>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src='client.js'></script>
+</body>
+</html>
