@@ -1,6 +1,5 @@
 
 // TODO:
-// io (migrate client calculaion to server) (R2.1 R3.5)
 // group select, user permission, spectator (R1.3 R3.3 R3.8 R3.9)
 // wall collision
 // static ball collision (two ball are static but collide somehow)
@@ -10,38 +9,32 @@
 //connect to server and retain the socket
 let socket = io('http://' + window.document.location.host)
 
-// socket.on('ballsJSON', function(data) {
-//   let ballsObj = JSON.parse(data)
-//   movingBox.x = ballData.x
-//   movingBox.y = ballData.y
-//   drawCanvas()
-// })
+// Whenever client receives balls data(not including alias balls)
+socket.on('balls', function(data) {
+  let ballsData = JSON.parse(data)
+  for (let ball of ballArray) {
+    let ballData = ballsData[ball.id]
+    ball.x = ballData.x
+    ball.y = ballData.y
+    ball.group = ballData.group
+    ball.colour = ballData.colour
+  }
+})
 
-// const updateBoxLoc = (locData) => {
-//   let jsonLocData = JSON.stringify(locData)
-//   socket.emit('blueBoxData', jsonLocData)
-// }
+// send necessary data of the ball being shot (only one ball)
+const shootBall = (data) => {
+  let ballData = JSON.stringify(data)
+  socket.emit('ballBeingShot', ballData)
+}
 
 
-function Ball(x, y, radius, id, group) {
+function Ball(x, y, radius, id) {
   this.radius = radius
-  this.x = x  //position X
-  this.y = y  //position Y
-  this.vx = 0  //velocity X
-  this.vy = 0  //velocity Y
-  this.fx = 0.991  //friction X
-  this.fy = 0.991  //friction Y
-  this.id = id  //identity
-  this.group = group  // membership
-  this.color = 'white'  // default color when no group is joined
-  this.speed = function() {
-    // magnitude of velocity vector
-    return Math.sqrt(this.dx * this.dx + this.dy * this.dy)
-  }
-  this.angle = function() {
-    //angle of ball with the x axis
-    return Math.atan2(this.dy, this.dx)
-  }
+  this.x = x //position X
+  this.y = y //position Y
+  this.id = id //identity
+  this.group = "" // membership
+  this.colour = 'white' // default colour when no group is joined
   this.draw = function() {
     // draw outer circle
     ctx.beginPath()
@@ -56,7 +49,7 @@ function Ball(x, y, radius, id, group) {
     ctx.beginPath()
     ctx.arc(Math.round(this.x), Math.round(this.y), this.radius * 1 / 2, 0, 2 * Math.PI)
     ctx.closePath()
-    ctx.fillStyle = this.color
+    ctx.fillStyle = this.colour
     ctx.fill()
   }
 }
@@ -93,16 +86,14 @@ const ctx = canvas.getContext("2d")
 const ballArray = []
 const aliasBalls = {}
 const targetArray = []
-let raf // used to window.requestAnimationFrame()
+let raf // for window.requestAnimationFrame()
 let ballClicked = null
 let mouseLoc // {object} mouse location in canvas
 let mouseDrag = false
-let stopThresholdY = 0.127
-let stopThresholdX = 0.015
 let group = ""
 let pause = false
 
-
+// init circle target and its alias
 let miniViewWidth = 150
 let miniViewHeight = 500
 let miniTargetRadius = 60
@@ -111,21 +102,19 @@ targetArray[targetArray.length] = miniTarget
 let aliasTarget = new Target(miniViewWidth * 2, miniViewWidth * 2, miniTargetRadius * 4)
 targetArray[targetArray.length] = aliasTarget
 
+// init balls and its alias
 let miniBallRadius = 10
 
 function spawnBalls() {
   // spawn small balls
   for (let i = 0; i < 6; i++) {
-    if (i < 3)
-      var miniBall = new Ball(miniViewWidth * 4 + 12 + i * 25, miniViewHeight - 11, miniBallRadius, i, "husky")
-    else
-      var miniBall = new Ball(miniViewWidth * 4 + 13 + i * 25, miniViewHeight - 11, miniBallRadius, i, "raven")
+    let miniBall = new Ball(-100, -100, miniBallRadius, i)
     ballArray[ballArray.length] = miniBall
   }
 
   // spawn large alias
   for (let ball of ballArray) {
-    var aliasBall = { ...ball }
+    let aliasBall = { ...ball }
     aliasBall.radius = ball.radius * 4
     aliasBalls[ball.id] = aliasBall
   }
@@ -138,23 +127,12 @@ function drawLayout() {
   ctx.strokeRect(0, 0, miniViewWidth * 4, miniViewHeight * 4)
 }
 
-function moveBalls() {
-  for (let ball of ballArray) {
-    // console.log(ball.vx, ball.vy) //test
-    if (Math.abs(ball.vx) < stopThresholdX) ball.vx = 0
-    if (Math.abs(ball.vy) < stopThresholdY) ball.vy = 0
-    ball.vx *= ball.fx
-    ball.vy *= ball.fy
-    ball.x += ball.vx
-    ball.y += ball.vy
-  }
-}
-
-// game loop using raf
+// game loop using raf(requestAnimationFrame)
 function drawCanvas() {
   // clear canvas before next draw
   ctx.clearRect(0, 0, canvas.width, canvas.height)
 
+  // draw
   drawLayout()
   drawTargets()
   drawBalls()
@@ -162,16 +140,12 @@ function drawCanvas() {
   if (mouseDrag && ballClicked && mouseLoc) {
     drawCatapultLine()
   }
-  if (!pause) {
-    moveBalls()
-  }
-  staticCollision()
-  ballCollision()
 
-  //test
+  //test for selecting ball
   ctx.strokeStyle = "rgba(255, 0, 0, .5)"
   ctx.strokeRect(ballRect.x, ballRect.y, ballRect.width, ballRect.height)
 
+  // used to render canvas at 60FPS
   raf = requestAnimationFrame(drawCanvas)
 }
 
@@ -187,14 +161,17 @@ function drawBalls() {
   }
 }
 
-// map miniBall's position, color to magnified view
+// map miniBall's position, group, colour to magnified view
 function drawAliasBalls() {
   for (let ball of ballArray) {
+    // calculate position
     let alias = aliasBalls[ball.id]
     alias.x = (ball.x - miniViewWidth * 4) * 4
     alias.y = ball.y * 4
+    // update group, colour
     alias.group = ball.group
-    alias.color = ball.color
+    alias.colour = ball.colour
+    // draw
     alias.draw()
   }
 }
@@ -210,12 +187,7 @@ function drawCatapultLine() {
   ctx.restore()
 }
 
-function ballCollision() {}
-
-function staticCollision() {}
-
-
-//test
+//test for selecting ball
 ballRect = {
   x: 0,
   y: 0,
@@ -238,7 +210,7 @@ function getBall(canvasX, canvasY) {
       Math.abs(canvasY - ball.y) < ball.radius
     ) {
 
-      //test
+      //test for selecting ball
       ballRect = {
         x: ball.x - ball.radius,
         y: ball.y - ball.radius,
@@ -292,15 +264,14 @@ function handleMouseUp(e) {
   mouseDrag = false
 
   // send JSON obj str containing: angle, vx vy
-  let vx = (ballClicked.x - mouseLoc.x)*.052
-  let vy = (ballClicked.y - mouseLoc.y)*.052
-  let angle = Math.atan2(vy, vx)
-  let shootObj = { vx, vy, angle }
-
-  //test local ball before socket.io
-  ballClicked.vx = vx
-  ballClicked.vy = vy
-  ballClicked.angle = angle
+  let vx = (ballClicked.x - mouseLoc.x) * .052
+  let vy = (ballClicked.y - mouseLoc.y) * .052
+  let shootData = {
+    id: ballClicked.id,
+    vx,
+    vy
+  }
+  shootBall(shootData)
 
   canvas.removeEventListener("mousemove", handleMouseMove)
   canvas.removeEventListener("mouseup", handleMouseUp)
@@ -308,20 +279,7 @@ function handleMouseUp(e) {
   e.stopPropagation()
 }
 
-//test
-function handleKeyDown(event) {
-  if (event.which == 80) pause = !pause
-
-  // // also pause raf
-  // if (pause) {
-  //   cancelAnimationFrame(raf)
-  // } else {
-  //   raf = requestAnimationFrame(drawCanvas)
-  // }
-  console.log("keydown:", event.keyCode)
-}
-
-// optimized for retina display
+// optimize for retina display
 function initCanvas() {
   let canvasWidth = miniViewWidth * 6 + 2
   let canvasHeight = 625
@@ -333,11 +291,10 @@ function initCanvas() {
   ctx.scale(scale, scale)
 }
 
-// starts after DOM is ready
+// start after DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
   initCanvas()
   canvas.addEventListener("mousedown", handleMouseDown)
-  document.addEventListener("keydown", handleKeyDown)
   spawnBalls()
   drawCanvas()
 })
