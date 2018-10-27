@@ -1,7 +1,7 @@
 
 // TODO:
-// R1.3 R2.1 R3.1 R3.3 R3.4
-// R3.5 R3.6 R3.7 R3.8 R3.9
+// R1.3 R2.1 R3.3
+// R3.5 R3.7 R3.8 R3.9
 
 const http = require('http')
 const ecStatic = require('ecstatic')

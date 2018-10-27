@@ -1,8 +1,8 @@
 
 // TODO:
+// io (migrate client calculaion to server) (R2.1 R3.5)
+// group select, user permission, spectator (R1.3 R3.3 R3.8 R3.9)
 // wall collision
-// io
-// group select, user permission
 // static ball collision (two ball are static but collide somehow)
 // dynamic ball collision (one or two balls are dynamic)
 
@@ -10,10 +10,10 @@
 //connect to server and retain the socket
 let socket = io('http://' + window.document.location.host)
 
-// socket.on('blueBoxData', function(data) {
-//   let locationData = JSON.parse(data)
-//   movingBox.x = locationData.x
-//   movingBox.y = locationData.y
+// socket.on('ballsJSON', function(data) {
+//   let ballsObj = JSON.parse(data)
+//   movingBox.x = ballData.x
+//   movingBox.y = ballData.y
 //   drawCanvas()
 // })
 
@@ -201,10 +201,13 @@ function drawAliasBalls() {
 
 function drawCatapultLine() {
   ctx.beginPath()
+  ctx.save()
+  ctx.setLineDash([5, 5])
   ctx.moveTo(ballClicked.x, ballClicked.y)
   ctx.lineTo(mouseLoc.x, mouseLoc.y)
   ctx.strokeStyle = "rgba(50, 50, 50, 0.75)"
   ctx.stroke()
+  ctx.restore()
 }
 
 function ballCollision() {}
@@ -289,8 +292,8 @@ function handleMouseUp(e) {
   mouseDrag = false
 
   // send JSON obj str containing: angle, vx vy
-  let vx = (ballClicked.x - mouseLoc.x)*.06
-  let vy = (ballClicked.y - mouseLoc.y)*.06
+  let vx = (ballClicked.x - mouseLoc.x)*.052
+  let vy = (ballClicked.y - mouseLoc.y)*.052
   let angle = Math.atan2(vy, vx)
   let shootObj = { vx, vy, angle }
 
