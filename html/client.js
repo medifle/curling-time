@@ -1,6 +1,5 @@
 
 // TODO:
-// add mouse events to shot ball
 // wall collision
 // io
 // group select, user permission
@@ -26,13 +25,23 @@ let socket = io('http://' + window.document.location.host)
 
 function Ball(x, y, radius, id, group) {
   this.radius = radius
-  this.x = x
-  this.y = y
-  this.vx = 0
-  this.vy = -Math.floor(Math.random() * Math.floor(3)) //test
-  this.id = id
-  this.group = group
-  this.color = 'white'
+  this.x = x  //position X
+  this.y = y  //position Y
+  this.vx = 0  //velocity X
+  this.vy = 0  //velocity Y
+  this.fx = 0.991  //friction X
+  this.fy = 0.991  //friction Y
+  this.id = id  //identity
+  this.group = group  // membership
+  this.color = 'white'  // default color when no group is joined
+  this.speed = function() {
+    // magnitude of velocity vector
+    return Math.sqrt(this.dx * this.dx + this.dy * this.dy)
+  }
+  this.angle = function() {
+    //angle of ball with the x axis
+    return Math.atan2(this.dy, this.dx)
+  }
   this.draw = function() {
     // draw outer circle
     ctx.beginPath()
@@ -49,14 +58,6 @@ function Ball(x, y, radius, id, group) {
     ctx.closePath()
     ctx.fillStyle = this.color
     ctx.fill()
-  }
-  this.speed = function() {
-    // magnitude of velocity vector
-    return Math.sqrt(this.dx * this.dx + this.dy * this.dy)
-  }
-  this.angle = function() {
-    //angle of ball with the x axis
-    return Math.atan2(this.dy, this.dx)
   }
 }
 
@@ -92,6 +93,12 @@ const ctx = canvas.getContext("2d")
 const ballArray = []
 const aliasBalls = {}
 const targetArray = []
+let raf // used to window.requestAnimationFrame()
+let ballClicked = null
+let mouseLoc // {object} mouse location in canvas
+let mouseDrag = false
+let stopThresholdY = 0.127
+let stopThresholdX = 0.015
 let group = ""
 let pause = false
 
@@ -133,11 +140,17 @@ function drawLayout() {
 
 function moveBalls() {
   for (let ball of ballArray) {
+    // console.log(ball.vx, ball.vy) //test
+    if (Math.abs(ball.vx) < stopThresholdX) ball.vx = 0
+    if (Math.abs(ball.vy) < stopThresholdY) ball.vy = 0
+    ball.vx *= ball.fx
+    ball.vy *= ball.fy
     ball.x += ball.vx
     ball.y += ball.vy
   }
 }
 
+// game loop using raf
 function drawCanvas() {
   // clear canvas before next draw
   ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -146,6 +159,9 @@ function drawCanvas() {
   drawTargets()
   drawBalls()
   drawAliasBalls()
+  if (mouseDrag && ballClicked && mouseLoc) {
+    drawCatapultLine()
+  }
   if (!pause) {
     moveBalls()
   }
@@ -156,7 +172,7 @@ function drawCanvas() {
   ctx.strokeStyle = "rgba(255, 0, 0, .5)"
   ctx.strokeRect(ballRect.x, ballRect.y, ballRect.width, ballRect.height)
 
-  requestAnimationFrame(drawCanvas)
+  raf = requestAnimationFrame(drawCanvas)
 }
 
 function drawTargets() {
@@ -183,6 +199,14 @@ function drawAliasBalls() {
   }
 }
 
+function drawCatapultLine() {
+  ctx.beginPath()
+  ctx.moveTo(ballClicked.x, ballClicked.y)
+  ctx.lineTo(mouseLoc.x, mouseLoc.y)
+  ctx.strokeStyle = "rgba(50, 50, 50, 0.75)"
+  ctx.stroke()
+}
+
 function ballCollision() {}
 
 function staticCollision() {}
@@ -197,10 +221,10 @@ ballRect = {
 }
 
 /**
- * Get the mini ball being clicked
- * @param {*} canvasX mouseDown position of x
- * @param {*} canvasY mouseDown position of y
- * @return ball object
+ * Get the mini ball clicked
+ * @param {Number} canvasX mouseDown position of x
+ * @param {Number} canvasY mouseDown position of y
+ * @return {object} ball clicked
  */
 function getBall(canvasX, canvasY) {
   for (let i = 0; i < ballArray.length; i++) {
@@ -225,13 +249,19 @@ function getBall(canvasX, canvasY) {
   return null
 }
 
-function handleMouseDown(e) {
-  //get mouse location relative to canvas top left
+// get mouse location relative to canvas top left
+// which is the location inside canvas as well
+function getMouseLocation(e) {
   let rect = canvas.getBoundingClientRect()
   let canvasX = e.clientX - rect.left
   let canvasY = e.clientY - rect.top
-  console.log(e.clientY, e.pageY, rect.top)
-  console.log(e.clientX, e.pageX, rect.left)
+  return { x: canvasX, y: canvasY }
+}
+
+function handleMouseDown(e) {
+  let mouseLoc = getMouseLocation(e)
+  let canvasX = mouseLoc.x
+  let canvasY = mouseLoc.y
   console.log("mouse down:" + canvasX + ", " + canvasY)
 
   ballClicked = getBall(canvasX, canvasY)
@@ -247,23 +277,27 @@ function handleMouseDown(e) {
 }
 
 function handleMouseMove(e) {
-  console.log("mouse move")
-
-  //get mouse location relative to canvas top left
-  let rect = canvas.getBoundingClientRect()
-  let canvasX = e.pageX - rect.left
-  let canvasY = e.pageY - rect.top
-
-  // wordBeingMoved.x = canvasX + deltaX
-  // wordBeingMoved.y = canvasY + deltaY
+  mouseDrag = true
+  mouseLoc = getMouseLocation(e)
+  // console.log("mouse moving at:" + mouseLoc.x + ", " + mouseLoc.y)
 
   e.stopPropagation()
 }
 
 function handleMouseUp(e) {
-  console.log("mouse up")
+  console.log("mouse up after clicking a ball")
+  mouseDrag = false
 
   // send JSON obj str containing: angle, vx vy
+  let vx = (ballClicked.x - mouseLoc.x)*.06
+  let vy = (ballClicked.y - mouseLoc.y)*.06
+  let angle = Math.atan2(vy, vx)
+  let shootObj = { vx, vy, angle }
+
+  //test local ball before socket.io
+  ballClicked.vx = vx
+  ballClicked.vy = vy
+  ballClicked.angle = angle
 
   canvas.removeEventListener("mousemove", handleMouseMove)
   canvas.removeEventListener("mouseup", handleMouseUp)
@@ -274,13 +308,20 @@ function handleMouseUp(e) {
 //test
 function handleKeyDown(event) {
   if (event.which == 80) pause = !pause
-  console.log("key pressed:", event.keyCode)
+
+  // // also pause raf
+  // if (pause) {
+  //   cancelAnimationFrame(raf)
+  // } else {
+  //   raf = requestAnimationFrame(drawCanvas)
+  // }
+  console.log("keydown:", event.keyCode)
 }
 
 // optimized for retina display
 function initCanvas() {
-  let canvasWidth = miniViewWidth * 5 + 2
-  let canvasHeight = 560
+  let canvasWidth = miniViewWidth * 6 + 2
+  let canvasHeight = 625
   canvas.style.width = canvasWidth + "px"
   canvas.style.height = canvasHeight + "px"
   let scale = window.devicePixelRatio
