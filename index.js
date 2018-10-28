@@ -62,8 +62,8 @@ const ballsEmitData = {} // necessary balls info sending to clients
 let miniViewWidth = 150
 let miniViewHeight = 500
 let miniBallRadius = 10
-let group1 = "husky"
-let group2 = "raven"
+let group1 = "group1"
+let group2 = "group2"
 
 const spawnBalls = () => {
   // spawn small balls

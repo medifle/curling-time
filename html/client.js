@@ -1,7 +1,14 @@
 
 // TODO:
 // group select, user permission, spectator (R1.3 R3.3 R3.8 R3.9)
-//  when player number = 2, restart game
+  // if player joined, change nickname in `.player_board`
+  // after select colour, change `.group_status` backgroundColor
+  // .divider show status: ["waiting player", "playing", "spectator mode"]
+    // if `waiting player`, start button remove `disabled`, exit button add `disabled`
+    // if `playing`, start button add `disabled`, exit button remove `disabled`
+    // if `spectator mode`, both buttons add `disabled`
+//  when player number = 2, server restart game
+
 // wall collision
 // static ball collision (two ball are static but collide somehow)
 // dynamic ball collision (one or two balls are dynamic)
@@ -43,7 +50,7 @@ function Ball(x, y, radius, id) {
     ctx.closePath()
     ctx.fillStyle = 'gray'
     ctx.fill()
-    ctx.strokeStyle = 'rgba(50, 50, 50, 0.25)'
+    ctx.strokeStyle = 'rgb(50, 50, 50)'
     ctx.stroke()
 
     // draw inner circle
@@ -294,15 +301,6 @@ function initCanvas() {
   canvas.width = canvasWidth * scale
   canvas.height = canvasHeight * scale
   ctx.scale(scale, scale)
-}
-
-// generate random colour
-function randomColor() {
-  red = Math.floor(Math.random() * 3) * 127;
-  green = Math.floor(Math.random() * 3) * 127;
-  blue = Math.floor(Math.random() * 3) * 127;
-  colour = "rgb(" + red + ", " + green + ", " + blue + ")";
-  return colour;
 }
 
 // add animation for login panel

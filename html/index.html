@@ -36,7 +36,7 @@
     }
 
     .login {
-      margin-top: 14vh;
+      margin-top: 12vh;
       padding: 20px;
       max-width: 250px;
       min-width: 210px;
@@ -64,13 +64,31 @@
     .player_board {
       display: flex;
       justify-content: space-around;
-      margin-bottom: 20px;
+      margin-bottom: 15px;
     }
     .player {
       min-height: 30px;
       display: flex;
       align-items: center;
       letter-spacing: 0.06rem;
+      font-weight: bold;
+      color: #3C6478;
+      flex-direction: column;
+    }
+    .player > div:not(:last-child) {
+      margin-bottom: 0.5em;
+    }
+
+    .group_status {
+      display: inline-block;
+      width: 60px;
+      height: 60px;
+      box-shadow: inset 0px 0px 0px 14px grey;
+      transition: box-shadow .2s ease;
+      transform: translateZ(0); /* performance reason: open GPU render */
+      border-radius: 50%;
+      background-color: white;
+      border: 1px solid rgb(50, 50, 50);
     }
 
     .divider {
@@ -165,8 +183,12 @@
       margin-bottom: 20px;
     }
 
-    .btn:hover {
+    .btn:not(:disabled):hover {
       opacity: .8;
+    }
+
+    .btn:disabled {
+      opacity: .45;
     }
 
     .btn:active {
@@ -189,9 +211,11 @@
     <div class="player_board">
       <div class="player">
         <div class="player1">waiting</div>
+        <div class="group_status"></div>
       </div>
       <div class="player">
         <div class="player2">waiting</div>
+        <div class="group_status"></div>
       </div>
     </div>
     <div class="divider">
@@ -202,16 +226,18 @@
       <!-- <input class="input" placeholder="Colour: yellow, red, or random" type="text" id="select_colour" maxlength="14"> -->
       <select class="input" id="select_colour">
         <option value="" disabled selected hidden>Choose colour</option>
-        <option value="random">Lucky colour</option>
-        <option value="yellow">Yellow</option>
-        <option value="red">Red</option>
-        <option value="Aquamarine">Aquamarine</option>
-        <option value="GreenYellow">GreenYellow</option>
-        <option value="Gold">Gold</option>
+        <option value="yellow">yellow</option>
+        <option value="gold">gold</option>
+        <option value="red">red</option>
+        <option value="tomato">tomato</option>
+        <option value="aquamarine">aquamarine</option>
+        <option value="yellowgreen">yellowgreen</option>
+        <option value="aliceBlue">aliceBlue</option>
+        <option value="wheat">wheat</option>
       </select>
       <div class="arrow_down"></div>
-      <button class="btn btn_join" id="join" value="start game">start game</button>
-      <button class="btn btn_exit" id="exit" value="exit game">exit game</button>
+      <button disabled class="btn btn_join" id="join" value="start game">start game</button>
+      <button disabled class="btn btn_exit" id="exit" value="exit game">exit game</button>
     </div>
   </div>
 
