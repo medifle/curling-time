@@ -1,6 +1,7 @@
 
 // TODO:
 // group select, user permission, spectator (R1.3 R3.3 R3.8 R3.9)
+//  when player number = 2, restart game
 // wall collision
 // static ball collision (two ball are static but collide somehow)
 // dynamic ball collision (one or two balls are dynamic)
@@ -234,7 +235,7 @@ function getMouseLocation(e) {
 }
 
 function handleMouseDown(e) {
-  let mouseLoc = getMouseLocation(e)
+  mouseLoc = getMouseLocation(e)
   let canvasX = mouseLoc.x
   let canvasY = mouseLoc.y
   console.log("mouse down:" + canvasX + ", " + canvasY)
@@ -254,7 +255,7 @@ function handleMouseDown(e) {
 function handleMouseMove(e) {
   mouseDrag = true
   mouseLoc = getMouseLocation(e)
-  // console.log("mouse moving at:" + mouseLoc.x + ", " + mouseLoc.y)
+  console.log("mouse moving at:" + mouseLoc.x + ", " + mouseLoc.y)
 
   e.stopPropagation()
 }
@@ -264,14 +265,18 @@ function handleMouseUp(e) {
   mouseDrag = false
 
   // send JSON obj str containing: angle, vx vy
-  let vx = (ballClicked.x - mouseLoc.x) * .052
-  let vy = (ballClicked.y - mouseLoc.y) * .052
-  let shootData = {
-    id: ballClicked.id,
-    vx,
-    vy
+  if (ballClicked && mouseLoc) {
+
+    let vx = (ballClicked.x - mouseLoc.x) * .052
+    let vy = (ballClicked.y - mouseLoc.y) * .052
+    let shootData = {
+      id: ballClicked.id,
+      vx,
+      vy
+    }
+    console.log(shootData)
+    shootBall(shootData)
   }
-  shootBall(shootData)
 
   canvas.removeEventListener("mousemove", handleMouseMove)
   canvas.removeEventListener("mouseup", handleMouseUp)
@@ -281,7 +286,7 @@ function handleMouseUp(e) {
 
 // optimize for retina display
 function initCanvas() {
-  let canvasWidth = miniViewWidth * 6 + 2
+  let canvasWidth = miniViewWidth * 5.5 + 2
   let canvasHeight = 625
   canvas.style.width = canvasWidth + "px"
   canvas.style.height = canvasHeight + "px"
@@ -291,10 +296,27 @@ function initCanvas() {
   ctx.scale(scale, scale)
 }
 
+// generate random colour
+function randomColor() {
+  red = Math.floor(Math.random() * 3) * 127;
+  green = Math.floor(Math.random() * 3) * 127;
+  blue = Math.floor(Math.random() * 3) * 127;
+  colour = "rgb(" + red + ", " + green + ", " + blue + ")";
+  return colour;
+}
+
+// add animation for login panel
+function addLoginAnim() {
+  let login = document.querySelector('.login')
+  login.classList.add('login_ready')
+}
+
 // start after DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
   initCanvas()
   canvas.addEventListener("mousedown", handleMouseDown)
   spawnBalls()
   drawCanvas()
+
+  setTimeout(addLoginAnim, 180)
 })

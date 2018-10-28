@@ -4,35 +4,216 @@
 
 <head>
   <title>curling with socket.io</title>
+  <link href="https://fonts.googleapis.com/css?family=Raleway" rel="stylesheet">
   <!-- <script src="jquery-1.11.3.js"></script> -->
 
   <style>
+    *, *:before, *:after {
+      box-sizing: border-box;
+    }
     body {
       background: #fff;
-      margin: 2px;
+      margin-top: 20px;
     }
 
-    /*element selectors: */
-    canvas {
-      display: block;
-      margin: auto;
-      /* margin-bottom: 150px; */
-      /*important here for padding to be 0 for mouse calculations */
-      padding: 0px;
+    h1 {
+      margin: 0;
+      padding: 0;
+      font-family: 'Raleway', sans-serif;
+      font-size: 1.5em;
     }
 
     .canvas {
+      display: block;
+      /*important here for padding to be 0 for mouse calculations */
+      padding: 0px;
       background: #ffffff;
-      /* border: thin outset #aaaaaa; */
+    }
+
+    .container {
+      display: flex;
+      justify-content: center;
+    }
+
+    .login {
+      margin-top: 14vh;
+      padding: 20px;
+      max-width: 250px;
+      min-width: 210px;
+      width: 100%;
+      height: max-content;
+      border: 1px solid #96999c;
+      border-radius: 2px;
+      text-align: center;
+      text-transform: capitalize;
+      transform: matrix(0.95, 0, 0, 0.95, 0, 80);
+      opacity: 0;
+      transition: all 620ms cubic-bezier(0.26, 1.58, 0.7, 0.9);
+    }
+
+    .login_ready {
+      transform: matrix(1, 0, 0, 1, 0, 0);
+      opacity: 1;
+    }
+
+    .header {
+      margin-bottom: 20px;
+      color: #300D4F;
+    }
+
+    .player_board {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
+    }
+    .player {
+      min-height: 30px;
+      display: flex;
+      align-items: center;
+      letter-spacing: 0.06rem;
+    }
+
+    .divider {
+      position: relative;
+      margin: 24px 0;
+      width: 100%;
+      text-align: center;
+    }
+
+    .divider::before {
+      content: '';
+      display: block;
+      width: 100%;
+      height: 2px;
+      position: absolute;
+      left: 0;
+      top: 11px;
+      background-color: #E9EDF6
+    }
+
+    .divider span {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1rem;
+      color: #5A6E9C;
+      background-color: #fff;
+      position: relative;
+      padding: 0 10px;
+    }
+
+    .input {
+      display: block;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      outline: none;
+      margin-bottom: 20px;
+      width: 100%;
+      height: 40px;
+      padding: 8px 16px;
+      font-size: 1rem;
+      background-color: #F2F6FF;
+      border: 1px solid;
+      border-color: transparent;
+      border-radius: 2px;
+      transition: all .2s ease
+    }
+
+    .input::placeholder {
+      color: #95A0BA
+    }
+
+    .input:focus {
+      border-color: #80bdff;
+      box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+    }
+
+    .arrow_down {
+      width: 0;
+      height: 0;
+      border-top: .3em solid;
+      border-right: .3em solid transparent;
+      border-bottom: 0;
+      border-left: .3em solid transparent;
+      color: #95A0BA;
+      position: absolute;
+      top: 247px;
+      right: 30px;
+    }
+
+    .btn {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      display: block;
+      border: none;
+      outline: none;
+      width: 100%;
+      height: 40px;
+      padding: 8px 24px;
+      border-radius: 2px;
+      letter-spacing: 0.22em;
+      font-size: 0.875rem;
+      line-height: 1;
+      text-transform: uppercase;
+      color: #fff;
+      background-color: #300D4F;
+      box-shadow: 0 3px 9px rgba(0,0,0,0.12);
+      transition: all 0.3s cubic-bezier(0.02, 0.52, 0.53, 0.99);
+    }
+
+    .btn:not(:last-child) {
+      margin-bottom: 20px;
+    }
+
+    .btn:hover {
+      opacity: .8;
+    }
+
+    .btn:active {
+      transform: matrix(0.95, 0, 0, 0.95, 0, 0);
+    }
+
+    .btn_join {
+      background-color: #5B1DBC;
     }
 
   </style>
 </head>
 
-<body>
+<body class="container">
   <canvas id='canvas1' class='canvas' width='752' height='560'>
     Canvas not supported
   </canvas>
+  <div class="login">
+    <h1 class="header">Curling Time!</h1>
+    <div class="player_board">
+      <div class="player">
+        <div class="player1">waiting</div>
+      </div>
+      <div class="player">
+        <div class="player2">waiting</div>
+      </div>
+    </div>
+    <div class="divider">
+      <span>waiting player</span>
+    </div>
+    <div class="form">
+      <input class="input" placeholder="Your nickname" type="text" id="nickname" maxlength="14">
+      <!-- <input class="input" placeholder="Colour: yellow, red, or random" type="text" id="select_colour" maxlength="14"> -->
+      <select class="input" id="select_colour">
+        <option value="" disabled selected hidden>Choose colour</option>
+        <option value="random">Lucky colour</option>
+        <option value="yellow">Yellow</option>
+        <option value="red">Red</option>
+        <option value="Aquamarine">Aquamarine</option>
+        <option value="GreenYellow">GreenYellow</option>
+        <option value="Gold">Gold</option>
+      </select>
+      <div class="arrow_down"></div>
+      <button class="btn btn_join" id="join" value="start game">start game</button>
+      <button class="btn btn_exit" id="exit" value="exit game">exit game</button>
+    </div>
+  </div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script src='client.js'></script>
