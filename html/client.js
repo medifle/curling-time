@@ -1,8 +1,6 @@
 
 // TODO:
 // R3.7
-// wall collision
-// static ball collision (two ball are static but collide somehow)
 // dynamic ball collision (one or two balls are dynamic)
 // deploy to heroku
 // IIFE (pass window obj into)
@@ -340,6 +338,12 @@ function handleMouseMove(e) {
   e.stopPropagation()
 }
 
+// var shotData = {id:2, vx:8.735999999999999, vy:0.46799999999999997} //test
+var shotData = {id:2, vx:8.735, vy:0.46799999999999997} //test
+function test() {
+  shootBall(shotData)
+}
+
 function handleMouseUp(e) {
   console.log('mouse up after clicking a ball')
   mouseDrag = false
@@ -354,7 +358,8 @@ function handleMouseUp(e) {
       vx,
       vy
     }
-    // console.log(shootData) //test
+    console.log(shootData) //test
+    shotData = shootData //test {id:2, vx:8.735999999999999, vy:0.46799999999999997}
     shootBall(shootData)
   }
 

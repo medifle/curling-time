@@ -204,13 +204,10 @@ const distance = (a, b) => {
   return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
 }
 
-const distanceNextFrame = (a, b) => {
-  return Math.sqrt((a.x + a.vx - b.x - b.vx)**2 + (a.y + a.vy - b.y - b.vy)**2) - a.radius - b.radius;
-}
-
 // when two balls are overlapped when they are static for some reason (like random spawned)
 // place one of them to a position so that the distance between them is 0
 const staticCollision = () => {
+  // for two balls
   let ballsArr = Object.values(ballsData) //convert ballsData to an array
   for (let i = 0; i < ballsArr.length - 1; i++) {
     for (let j = i + 1; j < ballsArr.length; j++) {
@@ -224,9 +221,24 @@ const staticCollision = () => {
       }
     }
   }
+  // for wall
+  for (let ball of ballsArr) {
+    if (ball.x - ball.radius < miniViewWidth * 4) {
+      ball.x = miniViewWidth*4 + ball.radius + ball.x
+    }
+    if (ball.x + ball.radius > miniViewWidth * 5) {
+      ball.x = miniViewWidth*5 - ball.radius - ball.x
+    }
+    if (ball.y - ball.radius < 0) {
+      ball.y = ball.radius + ball.vy
+    }
+    if (ball.y + ball.radius > miniViewHeight) {
+      ball.y = miniViewHeight - ball.radius - ball.vy
+    }
+  }
 }
 
-
+// handle ball collision with wall
 const wallCollision = (ball) => {
   if (ball.x - ball.radius + ball.vx < miniViewWidth * 4 ||
     ball.x + ball.radius + ball.vx > miniViewWidth * 5)
@@ -245,25 +257,44 @@ const wallCollision = (ball) => {
     if (ball.wallCollision.vertical === false) {
       ball.vy *= -1;
       ball.wallCollision.vertical = true
+      if (ball.id === 1) console.log(ball)
     }
   } else {
     ball.wallCollision.vertical = false
+    if (ball.id === 1) console.log(ball)
   }
 }
 
-const ballCollision = () => {
+const distanceNextFrame = (a, b) => {
+  return Math.sqrt((a.x + a.vx - b.x - b.vx)**2 + (a.y + a.vy - b.y - b.vy)**2) - a.radius - b.radius;
+}
+
+// handle two balls collision
+const ballsCollision = () => {
   let ballsArr = Object.values(ballsData)
   for (let b1 of ballsArr) {
-    //
+    for (let b2 of ballsArr) {
+      if (b1 !== b2 && distanceNextFrame(b1, b2) <= 0) {
+        let theta1 = b1.angle()
+        let theta2 = b2.angle()
+        let phi = Math.atan2(b2.y - b1.y, b2.x - b1.x)
+        let v1 = b1.speed()
+        let v2 = b2.speed()
+
+        b1.vx  = v2*Math.cos(theta2 - phi) * Math.cos(phi) + v1*Math.sin(theta1-phi) * Math.cos(phi+Math.PI/2)
+        b1.vy  = v2*Math.cos(theta2 - phi) * Math.sin(phi) + v1*Math.sin(theta1-phi) * Math.sin(phi+Math.PI/2)
+        b2.vx  = v1*Math.cos(theta1 - phi) * Math.cos(phi) + v2*Math.sin(theta2-phi) * Math.cos(phi+Math.PI/2)
+        b2.vy  = v1*Math.cos(theta1 - phi) * Math.sin(phi) + v2*Math.sin(theta2-phi) * Math.sin(phi+Math.PI/2)
+      }
+    }
     wallCollision(b1)
   }
 }
 
-
 const updateBalls = () => {
   moveBalls()
   staticCollision()
-  ballCollision()
+  ballsCollision()
 }
 
 const updateClients = () => {
@@ -274,7 +305,8 @@ const updateClients = () => {
   }
 }
 
-let delay = 1000 / 60
+// let delay = 1000 / 60
+let delay = 1000 / 5 //test
 const start = () => {
   setInterval(updateClients, delay)
 }
