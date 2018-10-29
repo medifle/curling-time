@@ -4,6 +4,7 @@
 // wall collision
 // static ball collision (two ball are static but collide somehow)
 // dynamic ball collision (one or two balls are dynamic)
+// deploy to heroku
 // IIFE (pass window obj into)
 
 //connect to server and retain the socket

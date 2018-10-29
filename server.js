@@ -11,15 +11,19 @@ function Ball(x, y, radius, id, group) {
   this.fx = 0.991 //friction X
   this.fy = 0.991 //friction Y
   this.id = id //identity
-  this.group = group // membership
-  this.colour = ballColourDefault // default colour when no group is joined
+  this.group = group //membership
+  this.colour = ballColourDefault //default colour when no group is joined
   this.speed = function() {
     // magnitude of velocity vector
     return Math.sqrt(this.vx * this.vx + this.vy * this.vy)
   }
   this.angle = function() {
-    //angle of ball with the x axis
+    // angle of ball with the x axis
     return Math.atan2(this.vy, this.vx)
+  }
+  this.wallCollision = { //helper object to avoid double hit
+    horizontal: false,
+    vertical: false
   }
 }
 
@@ -78,8 +82,7 @@ io.on('connection', (socket) => {
 
     // check duplicate name or colour
     if (playerKeys.length === 1) {
-      if (loginData.nickname.toLowerCase() === players[playerKeys[0]].nickname.toLowerCase()
-      ) {
+      if (loginData.nickname.toLowerCase() === players[playerKeys[0]].nickname.toLowerCase()) {
         socket.emit('error_duplicate_name')
         return
       } else if (loginData.colour === players[playerKeys[0]].colour) {
@@ -142,7 +145,7 @@ io.on('connection', (socket) => {
 // init balls
 let pause = false
 let ballsData = {}
-let ballsEmitData = {} // necessary balls info sending to clients
+let ballsEmitData = {} //necessary balls info sending to clients
 const ballColourDefault = 'white'
 let miniViewWidth = 150
 let miniViewHeight = 500
@@ -197,12 +200,63 @@ function moveBalls() {
   }
 }
 
-const staticCollision = () => {
+const distance = (a, b) => {
+  return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
+}
 
+const distanceNextFrame = (a, b) => {
+  return Math.sqrt((a.x + a.vx - b.x - b.vx)**2 + (a.y + a.vy - b.y - b.vy)**2) - a.radius - b.radius;
+}
+
+// when two balls are overlapped when they are static for some reason (like random spawned)
+// place one of them to a position so that the distance between them is 0
+const staticCollision = () => {
+  let ballsArr = Object.values(ballsData) //convert ballsData to an array
+  for (let i = 0; i < ballsArr.length - 1; i++) {
+    for (let j = i + 1; j < ballsArr.length; j++) {
+      let b1 = ballsArr[i]
+      let b2 = ballsArr[j]
+      if (distance(b1, b2) < b1.radius + b2.radius) {
+        let theta = Math.atan2((b1.y - b2.y), (b1.x - b2.x))
+        let overlap = (b1.radius + b2.radius) - distance(b1, b2)
+        b2.x -= overlap * Math.cos(theta)
+        b2.y -= overlap * Math.sin(theta)
+      }
+    }
+  }
+}
+
+
+const wallCollision = (ball) => {
+  if (ball.x - ball.radius + ball.vx < miniViewWidth * 4 ||
+    ball.x + ball.radius + ball.vx > miniViewWidth * 5)
+  {
+    if (ball.wallCollision.horizontal === false) {
+      ball.vx *= -1;
+      ball.wallCollision.horizontal = true
+    }
+  } else {
+    ball.wallCollision.horizontal = false
+  }
+
+  if (ball.y - ball.radius + ball.vy < 0 ||
+    ball.y + ball.radius + ball.vy > miniViewHeight)
+  {
+    if (ball.wallCollision.vertical === false) {
+      ball.vy *= -1;
+      ball.wallCollision.vertical = true
+    }
+  } else {
+    ball.wallCollision.vertical = false
+  }
 }
 
 const ballCollision = () => {
-
+  let ballsArr = Object.values(ballsData)
+  for (let b1 of ballsArr) {
+    //
+    wallCollision(b1)
+  }
 }
 
 
