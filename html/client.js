@@ -1,11 +1,7 @@
 
 // TODO:
-// increase canvas height
-// spectator mode control issue
-// R3.7
-// dynamic ball collision (one or two balls are dynamic)
-// deploy to heroku
 // IIFE (pass window obj into)
+// deploy to heroku
 
 //connect to server and retain the socket
 let socket = io('http://' + window.document.location.host)

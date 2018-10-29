@@ -1,6 +1,4 @@
 
-// TODO:
-// R3.7
 
 function Ball(x, y, radius, id, group) {
   this.radius = radius
