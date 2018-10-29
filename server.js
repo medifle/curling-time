@@ -257,11 +257,11 @@ const wallCollision = (ball) => {
     if (ball.wallCollision.vertical === false) {
       ball.vy *= -1;
       ball.wallCollision.vertical = true
-      if (ball.id === 1) console.log(ball)
+      // if (ball.id === 1) console.log(ball) //test
     }
   } else {
     ball.wallCollision.vertical = false
-    if (ball.id === 1) console.log(ball)
+    // if (ball.id === 1) console.log(ball) //test
   }
 }
 
@@ -305,8 +305,8 @@ const updateClients = () => {
   }
 }
 
-// let delay = 1000 / 60
-let delay = 1000 / 5 //test
+let delay = 1000 / 60
+// let delay = 1000 / 5 //test
 const start = () => {
   setInterval(updateClients, delay)
 }
