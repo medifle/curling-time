@@ -1,7 +1,7 @@
 
 (function() {
   //connect to server and retain the socket
-  let socket = io('http://' + window.document.location.host)
+  let socket = io('https://' + window.document.location.host, {secure: true})
 
   // Whenever client receives balls data(not including alias balls)
   socket.on('balls', (data) => {
