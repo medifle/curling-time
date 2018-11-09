@@ -1,10 +1,10 @@
 {
-  "name": "curling_game_socket.io",
-  "version": "0.0.0",
+  "name": "curling-time",
+  "version": "0.0.1",
   "description": "A simple curling game using socket.io",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node server.js"
   },
   "author": "medifle",
   "license": "ISC",

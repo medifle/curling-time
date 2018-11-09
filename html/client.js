@@ -1,24 +1,16 @@
 
 // TODO:
-// group select, user permission, spectator (R1.3 R3.3 R3.8 R3.9)
-  // if player joined, change nickname in `.player_board`
-  // after select colour, change `.group_status` backgroundColor
-  // .divider show status: ["waiting player", "playing", "spectator mode"]
-    // if `waiting player`, start button remove `disabled`, exit button add `disabled`
-    // if `playing`, start button add `disabled`, exit button remove `disabled`
-    // if `spectator mode`, both buttons add `disabled`
-//  when player number = 2, server restart game
-
+// R3.7
 // wall collision
 // static ball collision (two ball are static but collide somehow)
 // dynamic ball collision (one or two balls are dynamic)
-
+// IIFE (pass window obj into)
 
 //connect to server and retain the socket
 let socket = io('http://' + window.document.location.host)
 
 // Whenever client receives balls data(not including alias balls)
-socket.on('balls', function(data) {
+socket.on('balls', (data) => {
   let ballsData = JSON.parse(data)
   for (let ball of ballArray) {
     let ballData = ballsData[ball.id]
@@ -26,6 +18,69 @@ socket.on('balls', function(data) {
     ball.y = ballData.y
     ball.group = ballData.group
     ball.colour = ballData.colour
+  }
+})
+
+socket.on('error_duplicate_name', () => {
+  divider.textContent = 'try another name'
+})
+
+socket.on('error_duplicate_colour', () => {
+  divider.textContent = 'try another colour'
+})
+
+socket.on('players_update', (data) => {
+  let playersData = JSON.parse(data)
+  console.log(playersData) //test
+  // reset name, group colour to default
+  group1ColourEle.style.backgroundColor = ballColourDefault
+  group2ColourEle.style.backgroundColor = ballColourDefault
+  player1NameEle.textContent = playNameDefault
+  player2NameEle.textContent = playNameDefault
+
+  // update name, group colour
+  for (let id in playersData) {
+    let player = playersData[id]
+    if (player.group === group1) {
+      player1NameEle.textContent = player.nickname
+      group1ColourEle.style.backgroundColor = player.colour
+    }
+    else if (player.group === group2) {
+      player2NameEle.textContent = player.nickname
+      group2ColourEle.style.backgroundColor = player.colour
+    }
+  }
+
+  let playerNum = Object.keys(playersData).length
+  // if this client joined game, wait and start
+  if (playersData.hasOwnProperty(socket.id)) {
+    // update player group
+    group = playersData[socket.id]['group']
+    // update start button disabled status
+    startButton.disabled = true
+    // update divider text
+    if (playerNum < 2) {
+      divider.textContent = 'waiting player'
+    } else if (playerNum === 2) {
+      divider.textContent = 'playing'
+    }
+    // update exit button disabled status
+    exitButton.disabled = false
+    // get permission to control balls of the same group
+    isActivePlayer = true
+  }
+  // if this client did not join, enter spectator mode
+  else {
+    // update start and exit button disabled status
+    exitButton.disabled = true
+    // update divider text
+    if (playerNum === 2) {
+      divider.textContent = 'spectator mode'
+      startButton.disabled = true
+    } else {
+      divider.textContent = 'waiting player'
+      startButton.disabled = false
+    }
   }
 })
 
@@ -41,7 +96,7 @@ function Ball(x, y, radius, id) {
   this.x = x //position X
   this.y = y //position Y
   this.id = id //identity
-  this.group = "" // membership
+  this.group = '' // membership
   this.colour = 'white' // default colour when no group is joined
   this.draw = function() {
     // draw outer circle
@@ -89,17 +144,31 @@ function Target(x, y, radius) {
   }
 }
 
-const canvas = document.getElementById("canvas1") //our drawing canvas
-const ctx = canvas.getContext("2d")
+const player1NameEle = document.getElementById('player1')
+const player2NameEle = document.getElementById('player2')
+const group1ColourEle = document.getElementById('group1_colour')
+const group2ColourEle = document.getElementById('group2_colour')
+const divider = document.getElementById('divider_text')
+const nicknameEle = document.getElementById('nickname')
+const colourEle = document.getElementById('colour')
+const startButton = document.getElementById('join')
+const exitButton = document.getElementById('exit')
+const canvas = document.getElementById('canvas1') //our drawing canvas
+const ctx = canvas.getContext('2d') // get 2D context
 const ballArray = []
 const aliasBalls = {}
 const targetArray = []
+const group1 = 'group1'
+const group2 = 'group2'
+const ballColourDefault = 'white'
+const playNameDefault = 'waiting'
 let raf // for window.requestAnimationFrame()
 let ballClicked = null
 let mouseLoc // {object} mouse location in canvas
 let mouseDrag = false
-let group = ""
+let group = ''
 let pause = false
+let isActivePlayer = false
 
 // init circle target and its alias
 let miniViewWidth = 150
@@ -130,7 +199,7 @@ function spawnBalls() {
 
 function drawLayout() {
   ctx.beginPath()
-  ctx.strokeStyle = "#000"
+  ctx.strokeStyle = '#000'
   ctx.strokeRect(miniViewWidth * 4, 0, miniViewWidth, miniViewHeight)
   ctx.strokeRect(0, 0, miniViewWidth * 4, miniViewHeight * 4)
 }
@@ -150,7 +219,7 @@ function drawCanvas() {
   }
 
   //test for selecting ball
-  ctx.strokeStyle = "rgba(255, 0, 0, .5)"
+  ctx.strokeStyle = 'rgba(255, 0, 0, .5)'
   ctx.strokeRect(ballRect.x, ballRect.y, ballRect.width, ballRect.height)
 
   // used to render canvas at 60FPS
@@ -169,7 +238,7 @@ function drawBalls() {
   }
 }
 
-// map miniBall's position, group, colour to magnified view
+// map miniBall position, group, colour to magnified view
 function drawAliasBalls() {
   for (let ball of ballArray) {
     // calculate position
@@ -190,7 +259,7 @@ function drawCatapultLine() {
   ctx.setLineDash([5, 5])
   ctx.moveTo(ballClicked.x, ballClicked.y)
   ctx.lineTo(mouseLoc.x, mouseLoc.y)
-  ctx.strokeStyle = "rgba(50, 50, 50, 0.75)"
+  ctx.strokeStyle = 'rgba(50, 50, 50, 0.75)'
   ctx.stroke()
   ctx.restore()
 }
@@ -245,14 +314,17 @@ function handleMouseDown(e) {
   mouseLoc = getMouseLocation(e)
   let canvasX = mouseLoc.x
   let canvasY = mouseLoc.y
-  console.log("mouse down:" + canvasX + ", " + canvasY)
+  console.log('mouse down:' + canvasX + ', ' + canvasY)
 
-  ballClicked = getBall(canvasX, canvasY)
-  if (ballClicked != null) {
-    //attache mouse move and mouse up handlers
-    canvas.addEventListener("mousemove", handleMouseMove)
-    canvas.addEventListener("mouseup", handleMouseUp)
+  if (isActivePlayer) {
+    ballClicked = getBall(canvasX, canvasY)
+    if (ballClicked != null && ballClicked.group === group) {
+      //attache mouse move and mouse up handlers
+      canvas.addEventListener('mousemove', handleMouseMove)
+      canvas.addEventListener('mouseup', handleMouseUp)
+    }
   }
+
 
 
   e.stopPropagation()
@@ -262,13 +334,13 @@ function handleMouseDown(e) {
 function handleMouseMove(e) {
   mouseDrag = true
   mouseLoc = getMouseLocation(e)
-  console.log("mouse moving at:" + mouseLoc.x + ", " + mouseLoc.y)
+  // console.log('mouse moving at:' + mouseLoc.x + ', ' + mouseLoc.y) //test
 
   e.stopPropagation()
 }
 
 function handleMouseUp(e) {
-  console.log("mouse up after clicking a ball")
+  console.log('mouse up after clicking a ball')
   mouseDrag = false
 
   // send JSON obj str containing: angle, vx vy
@@ -281,22 +353,44 @@ function handleMouseUp(e) {
       vx,
       vy
     }
-    console.log(shootData)
+    // console.log(shootData) //test
     shootBall(shootData)
   }
 
-  canvas.removeEventListener("mousemove", handleMouseMove)
-  canvas.removeEventListener("mouseup", handleMouseUp)
+  canvas.removeEventListener('mousemove', handleMouseMove)
+  canvas.removeEventListener('mouseup', handleMouseUp)
 
   e.stopPropagation()
 }
+
+function sendLoginInfo(e) {
+  let nickname = nicknameEle.value
+  let colour = colourEle.value
+  if (nickname && colour) {
+    nicknameEle.value = ''
+    colourEle.value = ''
+    let loginData = {nickname, colour}
+    socket.emit('login', JSON.stringify(loginData))
+  }
+
+  e.stopPropagation()
+  e.preventDefault()
+}
+
+function sendExitInfo(e) {
+  socket.emit('exit')
+
+  e.stopPropagation()
+  e.preventDefault()
+}
+
 
 // optimize for retina display
 function initCanvas() {
   let canvasWidth = miniViewWidth * 5.5 + 2
   let canvasHeight = 625
-  canvas.style.width = canvasWidth + "px"
-  canvas.style.height = canvasHeight + "px"
+  canvas.style.width = canvasWidth + 'px'
+  canvas.style.height = canvasHeight + 'px'
   let scale = window.devicePixelRatio
   canvas.width = canvasWidth * scale
   canvas.height = canvasHeight * scale
@@ -312,7 +406,9 @@ function addLoginAnim() {
 // start after DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
   initCanvas()
-  canvas.addEventListener("mousedown", handleMouseDown)
+  canvas.addEventListener('mousedown', handleMouseDown)
+  startButton.addEventListener('click', sendLoginInfo)
+  exitButton.addEventListener('click', sendExitInfo)
   spawnBalls()
   drawCanvas()
 

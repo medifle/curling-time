@@ -79,7 +79,7 @@
       margin-bottom: 0.5em;
     }
 
-    .group_status {
+    .group_colour {
       display: inline-block;
       width: 60px;
       height: 60px;
@@ -105,11 +105,12 @@
       height: 2px;
       position: absolute;
       left: 0;
-      top: 11px;
+      top: 50%;
       background-color: #E9EDF6
     }
 
     .divider span {
+      display: inline-block;
       font-size: 0.75rem;
       font-weight: 600;
       text-transform: uppercase;
@@ -118,6 +119,7 @@
       background-color: #fff;
       position: relative;
       padding: 0 10px;
+      max-width: 9.7256rem;
     }
 
     .form {
@@ -145,7 +147,7 @@
       color: #95A0BA
     }
 
-    .input:focus {
+    .input:focus, .btn:focus {
       border-color: #80bdff;
       box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
     }
@@ -214,33 +216,32 @@
     <h1 class="header">Curling Time!</h1>
     <div class="player_board">
       <div class="player">
-        <div class="player1">waiting</div>
-        <div class="group_status"></div>
+        <div id="player1">waiting</div>
+        <div class="group_colour" id="group1_colour"></div>
       </div>
       <div class="player">
-        <div class="player2">waiting</div>
-        <div class="group_status"></div>
+        <div id="player2">waiting</div>
+        <div class="group_colour" id="group2_colour"></div>
       </div>
     </div>
     <div class="divider">
-      <span>waiting player</span>
+      <span id="divider_text">waiting player</span>
     </div>
     <div class="form">
-      <input class="input" placeholder="Your nickname" type="text" id="nickname" maxlength="14">
-      <!-- <input class="input" placeholder="Colour: yellow, red, or random" type="text" id="select_colour" maxlength="14"> -->
-      <select class="input" id="select_colour">
-        <option value="" disabled selected hidden>Choose colour</option>
+      <input class="input" placeholder="Your nickname" type="text" id="nickname" maxlength="8">
+      <select class="input" id="colour">
+        <option value="" disabled selected>Choose colour</option>
         <option value="yellow">yellow</option>
         <option value="gold">gold</option>
         <option value="red">red</option>
         <option value="tomato">tomato</option>
         <option value="aquamarine">aquamarine</option>
         <option value="yellowgreen">yellowgreen</option>
-        <option value="aliceBlue">aliceBlue</option>
+        <option value="#cc99ff">purple</option>
         <option value="wheat">wheat</option>
       </select>
       <div class="arrow_down"></div>
-      <button disabled class="btn btn_join" id="join" value="start game">start game</button>
+      <button class="btn btn_join" id="join" value="start game">start game</button>
       <button disabled class="btn btn_exit" id="exit" value="exit game">exit game</button>
     </div>
   </div>
