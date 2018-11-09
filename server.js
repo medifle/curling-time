@@ -1,4 +1,11 @@
 
+// TODO:
+// 1. add not-support reminder for non-desktop platforms
+// 2. wall collision bug when shooting the left-most or right-most ball to wall at some angle with high speed
+
+// 3. server send clients vx, vy(not only x, y), let client do calculation locally
+//    but will do a correction if receives update from server
+
 
 function Ball(x, y, radius, id, group) {
   this.radius = radius
@@ -279,6 +286,7 @@ const ballsCollision = () => {
         let v1 = b1.speed()
         let v2 = b2.speed()
 
+        // thanks to miskimit for balls collision calculation
         b1.vx  = v2*Math.cos(theta2 - phi) * Math.cos(phi) + v1*Math.sin(theta1-phi) * Math.cos(phi+Math.PI/2)
         b1.vy  = v2*Math.cos(theta2 - phi) * Math.sin(phi) + v1*Math.sin(theta1-phi) * Math.sin(phi+Math.PI/2)
         b2.vx  = v1*Math.cos(theta1 - phi) * Math.cos(phi) + v2*Math.sin(theta2-phi) * Math.cos(phi+Math.PI/2)
