@@ -1,5 +1,7 @@
 
 // TODO:
+// increase canvas height
+// spectator mode control issue
 // R3.7
 // dynamic ball collision (one or two balls are dynamic)
 // deploy to heroku
@@ -65,13 +67,11 @@ socket.on('players_update', (data) => {
     }
     // update exit button disabled status
     exitButton.disabled = false
-    // get permission to control balls of the same group
-    isActivePlayer = true
   }
   // if this client did not join, enter spectator mode
   else {
-    // update start and exit button disabled status
-    exitButton.disabled = true
+    exitButton.disabled = true // update start and exit button disabled status
+    group = '' //reset player's permission
     // update divider text
     if (playerNum === 2) {
       divider.textContent = 'spectator mode'
@@ -167,7 +167,6 @@ let mouseLoc // {object} mouse location in canvas
 let mouseDrag = false
 let group = ''
 let pause = false
-let isActivePlayer = false
 
 // init circle target and its alias
 let miniViewWidth = 150
@@ -315,16 +314,12 @@ function handleMouseDown(e) {
   let canvasY = mouseLoc.y
   console.log('mouse down:' + canvasX + ', ' + canvasY)
 
-  if (isActivePlayer) {
-    ballClicked = getBall(canvasX, canvasY)
-    if (ballClicked != null && ballClicked.group === group) {
-      //attache mouse move and mouse up handlers
-      canvas.addEventListener('mousemove', handleMouseMove)
-      canvas.addEventListener('mouseup', handleMouseUp)
-    }
+  ballClicked = getBall(canvasX, canvasY)
+  if (ballClicked != null && ballClicked.group === group) {
+    //attache mouse move and mouse up handlers
+    canvas.addEventListener('mousemove', handleMouseMove)
+    canvas.addEventListener('mouseup', handleMouseUp)
   }
-
-
 
   e.stopPropagation()
   e.preventDefault()
@@ -358,8 +353,8 @@ function handleMouseUp(e) {
       vx,
       vy
     }
-    console.log(shootData) //test
-    shotData = shootData //test {id:2, vx:8.735999999999999, vy:0.46799999999999997}
+    // console.log(shootData) //test
+    // shotData = shootData //test {id:2, vx:8.735999999999999, vy:0.46799999999999997}
     shootBall(shootData)
   }
 
@@ -394,7 +389,7 @@ function sendExitInfo(e) {
 // optimize for retina display
 function initCanvas() {
   let canvasWidth = miniViewWidth * 5.5 + 2
-  let canvasHeight = 625
+  let canvasHeight = 725
   canvas.style.width = canvasWidth + 'px'
   canvas.style.height = canvasHeight + 'px'
   let scale = window.devicePixelRatio
