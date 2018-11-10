@@ -7,7 +7,7 @@
     "start": "node server.js"
   },
   "author": "medifle",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "ecstatic": "^3.3.0",
     "socket.io": "^2.1.1"
