@@ -1,12 +1,10 @@
 <p align="center"><a href="https://curling-time.herokuapp.com" target="_blank" rel="noopener noreferrer"><img width="140" src="https://github.com/medifle/curling-time/blob/master/icon_curling.svg" alt="curling-time logo"></a></p>
 
-# curling-time
+# Introduction
 
-a small real-time web curling game
+Curling-time is a small real-time web curling game.
 
 Hosted on Heroku to [play around](https://curling-time.herokuapp.com)
-
-## Description
 
 Two players can play curling online while other spectators can watch the live game.
 
