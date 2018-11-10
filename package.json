@@ -2,7 +2,7 @@
   "name": "curling-time",
   "version": "0.1.0",
   "description": "A simple curling game using socket.io",
-  "main": "server.js",
+  "private": true,
   "scripts": {
     "start": "node server.js"
   },
