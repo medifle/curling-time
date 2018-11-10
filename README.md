@@ -4,7 +4,7 @@
 
 a small real-time web curling game
 
-Hosted on Heroku [to play around](https://curling-time.herokuapp.com)
+Hosted on Heroku to [play around](https://curling-time.herokuapp.com)
 
 ## Description
 
