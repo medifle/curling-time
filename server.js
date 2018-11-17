@@ -1,11 +1,14 @@
 
 // TODO:
 // 1. add not-support reminder for non-desktop platforms
-// 2. wall collision bug when shooting the left-most or right-most ball to wall at some angle with high speed
+// 2. turn shared method into function prototype
+// 3. modularization
+// 4. wall collision bug when shooting the left-most or right-most ball to wall at some angle with high speed
 
-// 3. server send clients vx, vy(not only x, y), let client do calculation locally
+// 5. server send clients vx, vy(not only x, y), let client do calculation locally
 //    but will do a correction if receives update from server
-
+// 6. add player's turn
+// 7. add score rules
 
 function Ball(x, y, radius, id, group) {
   this.radius = radius
