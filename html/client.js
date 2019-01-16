@@ -1,6 +1,7 @@
 ;(function() {
   //connect to server and retain the socket
   let socket = io('https://' + window.document.location.host, {secure: true})
+  // let socket = io('http://' + window.document.location.host) // for local test
 
   // Whenever client receives balls data(not including alias balls)
   socket.on('balls', data => {
@@ -428,13 +429,17 @@
 
   // start after DOM is ready
   document.addEventListener('DOMContentLoaded', () => {
-    initCanvas()
-    canvas.addEventListener('mousedown', handleMouseDown)
-    startButton.addEventListener('click', sendLoginInfo)
-    exitButton.addEventListener('click', sendExitInfo)
-    spawnBalls()
-    drawCanvas()
+    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+      alert("Sorry, Curling Time is designed for desktop players :(")
+    } else {
+      initCanvas()
+      canvas.addEventListener('mousedown', handleMouseDown)
+      startButton.addEventListener('click', sendLoginInfo)
+      exitButton.addEventListener('click', sendExitInfo)
+      spawnBalls()
+      drawCanvas()
 
-    setTimeout(addLoginAnim, 180)
+      setTimeout(addLoginAnim, 180)
+    }
   })
 })()
