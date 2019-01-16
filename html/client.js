@@ -1,10 +1,9 @@
-
-(function() {
+;(function() {
   //connect to server and retain the socket
   let socket = io('https://' + window.document.location.host, {secure: true})
 
   // Whenever client receives balls data(not including alias balls)
-  socket.on('balls', (data) => {
+  socket.on('balls', data => {
     let ballsData = JSON.parse(data)
     for (let ball of ballArray) {
       let ballData = ballsData[ball.id]
@@ -23,7 +22,7 @@
     divider.textContent = 'try another colour'
   })
 
-  socket.on('players_update', (data) => {
+  socket.on('players_update', data => {
     let playersData = JSON.parse(data)
 
     // reset name, group colour to default
@@ -76,11 +75,10 @@
   })
 
   // send necessary data of the ball being shot (only one ball)
-  const shootBall = (data) => {
+  const shootBall = data => {
     let ballData = JSON.stringify(data)
     socket.emit('ballBeingShot', ballData)
   }
-
 
   function Ball(x, y, radius, id) {
     this.radius = radius
@@ -92,7 +90,13 @@
     this.draw = function() {
       // draw outer circle
       ctx.beginPath()
-      ctx.arc(Math.round(this.x), Math.round(this.y), this.radius, 0, 2 * Math.PI)
+      ctx.arc(
+        Math.round(this.x),
+        Math.round(this.y),
+        this.radius,
+        0,
+        2 * Math.PI
+      )
       ctx.closePath()
       ctx.fillStyle = 'gray'
       ctx.fill()
@@ -101,7 +105,13 @@
 
       // draw inner circle
       ctx.beginPath()
-      ctx.arc(Math.round(this.x), Math.round(this.y), this.radius * 1 / 2, 0, 2 * Math.PI)
+      ctx.arc(
+        Math.round(this.x),
+        Math.round(this.y),
+        (this.radius * 1) / 2,
+        0,
+        2 * Math.PI
+      )
       ctx.closePath()
       ctx.fillStyle = this.colour
       ctx.fill()
@@ -114,22 +124,46 @@
     this.y = y
     this.draw = function() {
       ctx.beginPath()
-      ctx.arc(Math.round(this.x), Math.round(this.y), this.radius, 0, 2 * Math.PI)
+      ctx.arc(
+        Math.round(this.x),
+        Math.round(this.y),
+        this.radius,
+        0,
+        2 * Math.PI
+      )
       ctx.fillStyle = 'blue'
       ctx.fill()
 
       ctx.beginPath()
-      ctx.arc(Math.round(this.x), Math.round(this.y), (this.radius * 3 / 4), 0, 2 * Math.PI)
+      ctx.arc(
+        Math.round(this.x),
+        Math.round(this.y),
+        (this.radius * 3) / 4,
+        0,
+        2 * Math.PI
+      )
       ctx.fillStyle = 'white'
       ctx.fill()
 
       ctx.beginPath()
-      ctx.arc(Math.round(this.x), Math.round(this.y), this.radius * 1 / 2, 0, 2 * Math.PI)
+      ctx.arc(
+        Math.round(this.x),
+        Math.round(this.y),
+        (this.radius * 1) / 2,
+        0,
+        2 * Math.PI
+      )
       ctx.fillStyle = 'red'
       ctx.fill()
 
       ctx.beginPath()
-      ctx.arc(Math.round(this.x), Math.round(this.y), this.radius * 1 / 4, 0, 2 * Math.PI)
+      ctx.arc(
+        Math.round(this.x),
+        Math.round(this.y),
+        (this.radius * 1) / 4,
+        0,
+        2 * Math.PI
+      )
       ctx.fillStyle = 'white'
       ctx.fill()
     }
@@ -164,9 +198,17 @@
   let miniViewWidth = 150
   let miniViewHeight = 500
   let miniTargetRadius = 60
-  let miniTarget = new Target(miniViewWidth * 4.5, miniViewWidth / 2, miniTargetRadius)
+  let miniTarget = new Target(
+    miniViewWidth * 4.5,
+    miniViewWidth / 2,
+    miniTargetRadius
+  )
   targetArray[targetArray.length] = miniTarget
-  let aliasTarget = new Target(miniViewWidth * 2, miniViewWidth * 2, miniTargetRadius * 4)
+  let aliasTarget = new Target(
+    miniViewWidth * 2,
+    miniViewWidth * 2,
+    miniTargetRadius * 4
+  )
   targetArray[targetArray.length] = aliasTarget
 
   // init balls and its alias
@@ -181,7 +223,7 @@
 
     // spawn large alias
     for (let ball of ballArray) {
-      let aliasBall = { ...ball }
+      let aliasBall = {...ball}
       aliasBall.radius = ball.radius * 4
       aliasBalls[ball.id] = aliasBall
     }
@@ -276,7 +318,6 @@
         Math.abs(canvasX - ball.x) < ball.radius &&
         Math.abs(canvasY - ball.y) < ball.radius
       ) {
-
         // //test for selecting ball
         // ballRect = {
         //   x: ball.x - ball.radius,
@@ -297,7 +338,7 @@
     let rect = canvas.getBoundingClientRect()
     let canvasX = e.clientX - rect.left
     let canvasY = e.clientY - rect.top
-    return { x: canvasX, y: canvasY }
+    return {x: canvasX, y: canvasY}
   }
 
   function handleMouseDown(e) {
@@ -330,9 +371,8 @@
 
     // send JSON obj str containing: angle, vx vy
     if (ballClicked && mouseLoc) {
-
-      let vx = (ballClicked.x - mouseLoc.x) * .052
-      let vy = (ballClicked.y - mouseLoc.y) * .052
+      let vx = (ballClicked.x - mouseLoc.x) * 0.052
+      let vy = (ballClicked.y - mouseLoc.y) * 0.052
       let shootData = {
         id: ballClicked.id,
         vx,
@@ -353,7 +393,7 @@
     if (nickname && colour) {
       nicknameEle.value = ''
       colourEle.value = ''
-      let loginData = { nickname, colour }
+      let loginData = {nickname, colour}
       socket.emit('login', JSON.stringify(loginData))
     }
 
@@ -367,7 +407,6 @@
     e.stopPropagation()
     e.preventDefault()
   }
-
 
   // optimize for retina display
   function initCanvas() {
@@ -398,4 +437,4 @@
 
     setTimeout(addLoginAnim, 180)
   })
-}())
+})()

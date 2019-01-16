@@ -1,252 +1,264 @@
 <!DOCTYPE html>
 
 <html>
+  <head>
+    <title>curling with socket.io</title>
+    <link
+      href="https://fonts.googleapis.com/css?family=Raleway"
+      rel="stylesheet"
+    />
+    <!-- <script src="jquery-1.11.3.js"></script> -->
 
-<head>
-  <title>curling with socket.io</title>
-  <link href="https://fonts.googleapis.com/css?family=Raleway" rel="stylesheet">
-  <!-- <script src="jquery-1.11.3.js"></script> -->
+    <style>
+      *,
+      *:before,
+      *:after {
+        box-sizing: border-box;
+      }
+      body {
+        background: #fff;
+        margin-top: 20px;
+      }
 
-  <style>
-    *, *:before, *:after {
-      box-sizing: border-box;
-    }
-    body {
-      background: #fff;
-      margin-top: 20px;
-    }
+      h1 {
+        margin: 0;
+        padding: 0;
+        font-size: 1.5em;
+      }
 
-    h1 {
-      margin: 0;
-      padding: 0;
-      font-size: 1.5em;
-    }
+      .canvas {
+        display: block;
+        /*important here for padding to be 0 for mouse calculations */
+        padding: 0px;
+        background: #ffffff;
+      }
 
-    .canvas {
-      display: block;
-      /*important here for padding to be 0 for mouse calculations */
-      padding: 0px;
-      background: #ffffff;
-    }
+      .container {
+        display: flex;
+        justify-content: center;
+      }
 
-    .container {
-      display: flex;
-      justify-content: center;
-    }
+      .login {
+        margin-top: 12vh;
+        padding: 20px;
+        max-width: 250px;
+        min-width: 215px;
+        width: 100%;
+        height: max-content;
+        border: 1px solid #96999c;
+        border-radius: 2px;
+        font-family: 'Raleway', sans-serif;
+        text-align: center;
+        text-transform: capitalize;
+        transform: matrix(0.95, 0, 0, 0.95, 0, 80);
+        opacity: 0;
+        transition: all 620ms cubic-bezier(0.26, 1.58, 0.7, 0.9);
+      }
 
-    .login {
-      margin-top: 12vh;
-      padding: 20px;
-      max-width: 250px;
-      min-width: 215px;
-      width: 100%;
-      height: max-content;
-      border: 1px solid #96999c;
-      border-radius: 2px;
-      font-family: 'Raleway', sans-serif;
-      text-align: center;
-      text-transform: capitalize;
-      transform: matrix(0.95, 0, 0, 0.95, 0, 80);
-      opacity: 0;
-      transition: all 620ms cubic-bezier(0.26, 1.58, 0.7, 0.9);
-    }
+      .login_ready {
+        transform: matrix(1, 0, 0, 1, 0, 0);
+        opacity: 1;
+      }
 
-    .login_ready {
-      transform: matrix(1, 0, 0, 1, 0, 0);
-      opacity: 1;
-    }
+      .header {
+        margin-bottom: 20px;
+        color: #300d4f;
+      }
 
-    .header {
-      margin-bottom: 20px;
-      color: #300D4F;
-    }
+      .player_board {
+        display: flex;
+        justify-content: space-around;
+        margin-bottom: 15px;
+      }
+      .player {
+        min-height: 30px;
+        display: flex;
+        align-items: center;
+        letter-spacing: 0.06rem;
+        font-weight: bold;
+        color: #3c6478;
+        flex-direction: column;
+      }
+      .player > div:not(:last-child) {
+        margin-bottom: 0.5em;
+      }
 
-    .player_board {
-      display: flex;
-      justify-content: space-around;
-      margin-bottom: 15px;
-    }
-    .player {
-      min-height: 30px;
-      display: flex;
-      align-items: center;
-      letter-spacing: 0.06rem;
-      font-weight: bold;
-      color: #3C6478;
-      flex-direction: column;
-    }
-    .player > div:not(:last-child) {
-      margin-bottom: 0.5em;
-    }
+      .group_colour {
+        display: inline-block;
+        width: 60px;
+        height: 60px;
+        box-shadow: inset 0px 0px 0px 14px grey;
+        transition: box-shadow 0.2s ease;
+        transform: translateZ(0); /* performance reason: open GPU render */
+        border-radius: 50%;
+        background-color: white;
+        border: 1px solid rgb(50, 50, 50);
+      }
 
-    .group_colour {
-      display: inline-block;
-      width: 60px;
-      height: 60px;
-      box-shadow: inset 0px 0px 0px 14px grey;
-      transition: box-shadow .2s ease;
-      transform: translateZ(0); /* performance reason: open GPU render */
-      border-radius: 50%;
-      background-color: white;
-      border: 1px solid rgb(50, 50, 50);
-    }
+      .divider {
+        position: relative;
+        margin-bottom: 24px;
+        width: 100%;
+        text-align: center;
+      }
 
-    .divider {
-      position: relative;
-      margin-bottom: 24px;
-      width: 100%;
-      text-align: center;
-    }
+      .divider::before {
+        content: '';
+        display: block;
+        width: 100%;
+        height: 2px;
+        position: absolute;
+        left: 0;
+        top: 50%;
+        background-color: #e9edf6;
+      }
 
-    .divider::before {
-      content: '';
-      display: block;
-      width: 100%;
-      height: 2px;
-      position: absolute;
-      left: 0;
-      top: 50%;
-      background-color: #E9EDF6
-    }
+      .divider span {
+        display: inline-block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1rem;
+        color: #5a6e9c;
+        background-color: #fff;
+        position: relative;
+        padding: 0 10px;
+        max-width: 9.7256rem;
+      }
 
-    .divider span {
-      display: inline-block;
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.1rem;
-      color: #5A6E9C;
-      background-color: #fff;
-      position: relative;
-      padding: 0 10px;
-      max-width: 9.7256rem;
-    }
+      .form {
+        position: relative;
+      }
 
-    .form {
-      position: relative;
-    }
+      .input {
+        display: block;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        outline: none;
+        margin-bottom: 20px;
+        width: 100%;
+        height: 40px;
+        padding: 8px 16px;
+        font-size: 1rem;
+        background-color: #f2f6ff;
+        border: 1px solid;
+        border-color: transparent;
+        border-radius: 2px;
+        transition: all 0.2s ease;
+      }
 
-    .input {
-      display: block;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      outline: none;
-      margin-bottom: 20px;
-      width: 100%;
-      height: 40px;
-      padding: 8px 16px;
-      font-size: 1rem;
-      background-color: #F2F6FF;
-      border: 1px solid;
-      border-color: transparent;
-      border-radius: 2px;
-      transition: all .2s ease
-    }
+      .input::placeholder {
+        color: #95a0ba;
+      }
 
-    .input::placeholder {
-      color: #95A0BA
-    }
+      .input:focus,
+      .btn:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+      }
 
-    .input:focus, .btn:focus {
-      border-color: #80bdff;
-      box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
-    }
+      .arrow_down {
+        width: 0;
+        height: 0;
+        border-top: 0.3em solid;
+        border-right: 0.3em solid transparent;
+        border-bottom: 0;
+        border-left: 0.3em solid transparent;
+        color: #95a0ba;
+        position: absolute;
+        top: 4.8rem;
+        right: 0.7rem;
+      }
 
-    .arrow_down {
-      width: 0;
-      height: 0;
-      border-top: .3em solid;
-      border-right: .3em solid transparent;
-      border-bottom: 0;
-      border-left: .3em solid transparent;
-      color: #95A0BA;
-      position: absolute;
-      top: 4.8rem;
-      right: 0.7rem;
-    }
+      .btn {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        display: block;
+        border: none;
+        outline: none;
+        width: 100%;
+        height: 40px;
+        padding: 8px 24px;
+        border-radius: 2px;
+        letter-spacing: 0.22em;
+        font-size: 0.875rem;
+        line-height: 1;
+        text-transform: uppercase;
+        color: #fff;
+        background-color: #300d4f;
+        box-shadow: 0 3px 9px rgba(0, 0, 0, 0.12);
+        transition: all 0.3s cubic-bezier(0.02, 0.52, 0.53, 0.99);
+      }
 
-    .btn {
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      display: block;
-      border: none;
-      outline: none;
-      width: 100%;
-      height: 40px;
-      padding: 8px 24px;
-      border-radius: 2px;
-      letter-spacing: 0.22em;
-      font-size: 0.875rem;
-      line-height: 1;
-      text-transform: uppercase;
-      color: #fff;
-      background-color: #300D4F;
-      box-shadow: 0 3px 9px rgba(0,0,0,0.12);
-      transition: all 0.3s cubic-bezier(0.02, 0.52, 0.53, 0.99);
-    }
+      .btn:not(:last-child) {
+        margin-bottom: 20px;
+      }
 
-    .btn:not(:last-child) {
-      margin-bottom: 20px;
-    }
+      .btn:not(:disabled):hover {
+        opacity: 0.8;
+      }
 
-    .btn:not(:disabled):hover {
-      opacity: .8;
-    }
+      .btn:disabled {
+        opacity: 0.45;
+      }
 
-    .btn:disabled {
-      opacity: .45;
-    }
+      .btn:active {
+        transform: matrix(0.95, 0, 0, 0.95, 0, 0);
+      }
 
-    .btn:active {
-      transform: matrix(0.95, 0, 0, 0.95, 0, 0);
-    }
+      .btn_join {
+        background-color: #5b1dbc;
+      }
+    </style>
+  </head>
 
-    .btn_join {
-      background-color: #5B1DBC;
-    }
-
-  </style>
-</head>
-
-<body class="container">
-  <canvas id='canvas1' class='canvas' width='752' height='725'>
-    Canvas not supported
-  </canvas>
-  <div class="login">
-    <h1 class="header">Curling Time!</h1>
-    <div class="player_board">
-      <div class="player">
-        <div id="player1">waiting</div>
-        <div class="group_colour" id="group1_colour"></div>
+  <body class="container">
+    <canvas id="canvas1" class="canvas" width="752" height="725">
+      Canvas not supported
+    </canvas>
+    <div class="login">
+      <h1 class="header">Curling Time!</h1>
+      <div class="player_board">
+        <div class="player">
+          <div id="player1">waiting</div>
+          <div class="group_colour" id="group1_colour"></div>
+        </div>
+        <div class="player">
+          <div id="player2">waiting</div>
+          <div class="group_colour" id="group2_colour"></div>
+        </div>
       </div>
-      <div class="player">
-        <div id="player2">waiting</div>
-        <div class="group_colour" id="group2_colour"></div>
+      <div class="divider"><span id="divider_text">waiting player</span></div>
+      <div class="form">
+        <input
+          class="input"
+          placeholder="Your nickname"
+          type="text"
+          id="nickname"
+          maxlength="8"
+        />
+        <select class="input" id="colour">
+          <option value="" disabled selected>Choose colour</option>
+          <option value="yellow">yellow</option>
+          <option value="gold">gold</option>
+          <option value="red">red</option>
+          <option value="tomato">tomato</option>
+          <option value="aquamarine">aquamarine</option>
+          <option value="yellowgreen">yellowgreen</option>
+          <option value="#cc99ff">purple</option>
+          <option value="wheat">wheat</option>
+        </select>
+        <div class="arrow_down"></div>
+        <button class="btn btn_join" id="join" value="start game">
+          start game
+        </button>
+        <button disabled class="btn btn_exit" id="exit" value="exit game">
+          exit game
+        </button>
       </div>
     </div>
-    <div class="divider">
-      <span id="divider_text">waiting player</span>
-    </div>
-    <div class="form">
-      <input class="input" placeholder="Your nickname" type="text" id="nickname" maxlength="8">
-      <select class="input" id="colour">
-        <option value="" disabled selected>Choose colour</option>
-        <option value="yellow">yellow</option>
-        <option value="gold">gold</option>
-        <option value="red">red</option>
-        <option value="tomato">tomato</option>
-        <option value="aquamarine">aquamarine</option>
-        <option value="yellowgreen">yellowgreen</option>
-        <option value="#cc99ff">purple</option>
-        <option value="wheat">wheat</option>
-      </select>
-      <div class="arrow_down"></div>
-      <button class="btn btn_join" id="join" value="start game">start game</button>
-      <button disabled class="btn btn_exit" id="exit" value="exit game">exit game</button>
-    </div>
-  </div>
 
-  <script src="/socket.io/socket.io.js"></script>
-  <script src='client.js'></script>
-</body>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="client.js"></script>
+  </body>
 </html>

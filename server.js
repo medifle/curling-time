@@ -1,4 +1,3 @@
-
 // TODO:
 // 1. add not-support reminder for non-desktop platforms
 // 2. turn shared method into function prototype
@@ -9,6 +8,9 @@
 //    but will do a correction if receives update from server
 // 6. add player's turn
 // 7. add score rules
+// 8. different play room
+// 9. user login?
+// 10. guest model, user model
 
 function Ball(x, y, radius, id, group) {
   this.radius = radius
@@ -29,7 +31,8 @@ function Ball(x, y, radius, id, group) {
     // angle of ball with the x axis
     return Math.atan2(this.vy, this.vx)
   }
-  this.wallCollision = { //helper object to avoid double hit
+  this.wallCollision = {
+    //helper object to avoid double hit
     horizontal: false,
     vertical: false
   }
@@ -50,9 +53,11 @@ const ecStatic = require('ecstatic')
 const PORT = process.env.PORT || 3000
 const ROOT_DIR = 'html' //dir to serve static files from
 //static file server based on npm module ecstatic
-const server = http.createServer(ecStatic({
-  root: __dirname + '/' + ROOT_DIR
-}))
+const server = http.createServer(
+  ecStatic({
+    root: __dirname + '/' + ROOT_DIR
+  })
+)
 const io = require('socket.io')(server) //wrap server app in npm socket.io capability
 server.listen(PORT) //start server listening on PORT
 
@@ -78,11 +83,11 @@ const updateBallsColour = () => {
   }
 }
 
-io.on('connection', (socket) => {
+io.on('connection', socket => {
   console.log(socket.id + ' is connected')
   io.emit('players_update', JSON.stringify(players))
   // handle game login
-  socket.on('login', (data) => {
+  socket.on('login', data => {
     let loginData = JSON.parse(data)
     loginData.id = socket.id
     // if seats are avaialble
@@ -90,7 +95,10 @@ io.on('connection', (socket) => {
 
     // check duplicate name or colour
     if (playerKeys.length === 1) {
-      if (loginData.nickname.toLowerCase() === players[playerKeys[0]].nickname.toLowerCase()) {
+      if (
+        loginData.nickname.toLowerCase() ===
+        players[playerKeys[0]].nickname.toLowerCase()
+      ) {
         socket.emit('error_duplicate_name')
         return
       } else if (loginData.colour === players[playerKeys[0]].colour) {
@@ -141,13 +149,12 @@ io.on('connection', (socket) => {
     console.log(`Player ${socket.id} is disconnected`)
   })
 
-  socket.on('ballBeingShot', (data) => {
+  socket.on('ballBeingShot', data => {
     let ballShotData = JSON.parse(data)
     let ball = ballsData[ballShotData.id]
     ball.vx = ballShotData.vx
     ball.vy = ballShotData.vy
   })
-
 })
 
 // init balls
@@ -165,15 +172,33 @@ const spawnBalls = () => {
   // spawn small balls
   for (let i = 0; i < 6; i++) {
     if (i < 3)
-      var miniBall = new Ball(miniViewWidth * 4 + 12 + i * 25, miniViewHeight - 11, miniBallRadius, i, group1)
+      var miniBall = new Ball(
+        miniViewWidth * 4 + 12 + i * 25,
+        miniViewHeight - 11,
+        miniBallRadius,
+        i,
+        group1
+      )
     else
-      var miniBall = new Ball(miniViewWidth * 4 + 13 + i * 25, miniViewHeight - 11, miniBallRadius, i, group2)
+      var miniBall = new Ball(
+        miniViewWidth * 4 + 13 + i * 25,
+        miniViewHeight - 11,
+        miniBallRadius,
+        i,
+        group2
+      )
     ballsData[miniBall.id] = miniBall
   }
 
   for (let id in ballsData) {
     let ball = ballsData[id]
-    ballsEmitData[id] = new BallEmit(ball.x, ball.y, ball.radius, ball.id, ball.group);
+    ballsEmitData[id] = new BallEmit(
+      ball.x,
+      ball.y,
+      ball.radius,
+      ball.id,
+      ball.group
+    )
   }
 }
 
@@ -209,7 +234,7 @@ function moveBalls() {
 }
 
 const distance = (a, b) => {
-  return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
+  return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2)
 }
 
 // when two balls are overlapped when they are static for some reason (like random spawned)
@@ -222,8 +247,8 @@ const staticCollision = () => {
       let b1 = ballsArr[i]
       let b2 = ballsArr[j]
       if (distance(b1, b2) < b1.radius + b2.radius) {
-        let theta = Math.atan2((b1.y - b2.y), (b1.x - b2.x))
-        let overlap = (b1.radius + b2.radius) - distance(b1, b2)
+        let theta = Math.atan2(b1.y - b2.y, b1.x - b2.x)
+        let overlap = b1.radius + b2.radius - distance(b1, b2)
         b2.x -= overlap * Math.cos(theta)
         b2.y -= overlap * Math.sin(theta)
       }
@@ -232,10 +257,10 @@ const staticCollision = () => {
   // for wall
   for (let ball of ballsArr) {
     if (ball.x - ball.radius < miniViewWidth * 4) {
-      ball.x = miniViewWidth*4 + ball.radius + ball.x
+      ball.x = miniViewWidth * 4 + ball.radius + ball.x
     }
     if (ball.x + ball.radius > miniViewWidth * 5) {
-      ball.x = miniViewWidth*5 - ball.radius - ball.x
+      ball.x = miniViewWidth * 5 - ball.radius - ball.x
     }
     if (ball.y - ball.radius < 0) {
       ball.y = ball.radius + ball.vy
@@ -247,23 +272,25 @@ const staticCollision = () => {
 }
 
 // handle ball collision with wall
-const wallCollision = (ball) => {
-  if (ball.x - ball.radius + ball.vx < miniViewWidth * 4 ||
-    ball.x + ball.radius + ball.vx > miniViewWidth * 5)
-  {
+const wallCollision = ball => {
+  if (
+    ball.x - ball.radius + ball.vx < miniViewWidth * 4 ||
+    ball.x + ball.radius + ball.vx > miniViewWidth * 5
+  ) {
     if (ball.wallCollision.horizontal === false) {
-      ball.vx *= -1;
+      ball.vx *= -1
       ball.wallCollision.horizontal = true
     }
   } else {
     ball.wallCollision.horizontal = false
   }
 
-  if (ball.y - ball.radius + ball.vy < 0 ||
-    ball.y + ball.radius + ball.vy > miniViewHeight)
-  {
+  if (
+    ball.y - ball.radius + ball.vy < 0 ||
+    ball.y + ball.radius + ball.vy > miniViewHeight
+  ) {
     if (ball.wallCollision.vertical === false) {
-      ball.vy *= -1;
+      ball.vy *= -1
       ball.wallCollision.vertical = true
       // if (ball.id === 1) console.log(ball) //test
     }
@@ -274,7 +301,11 @@ const wallCollision = (ball) => {
 }
 
 const distanceNextFrame = (a, b) => {
-  return Math.sqrt((a.x + a.vx - b.x - b.vx)**2 + (a.y + a.vy - b.y - b.vy)**2) - a.radius - b.radius;
+  return (
+    Math.sqrt((a.x + a.vx - b.x - b.vx) ** 2 + (a.y + a.vy - b.y - b.vy) ** 2) -
+    a.radius -
+    b.radius
+  )
 }
 
 // handle two balls collision
@@ -290,10 +321,18 @@ const ballsCollision = () => {
         let v2 = b2.speed()
 
         // thanks to miskimit for balls collision calculation
-        b1.vx  = v2*Math.cos(theta2 - phi) * Math.cos(phi) + v1*Math.sin(theta1-phi) * Math.cos(phi+Math.PI/2)
-        b1.vy  = v2*Math.cos(theta2 - phi) * Math.sin(phi) + v1*Math.sin(theta1-phi) * Math.sin(phi+Math.PI/2)
-        b2.vx  = v1*Math.cos(theta1 - phi) * Math.cos(phi) + v2*Math.sin(theta2-phi) * Math.cos(phi+Math.PI/2)
-        b2.vy  = v1*Math.cos(theta1 - phi) * Math.sin(phi) + v2*Math.sin(theta2-phi) * Math.sin(phi+Math.PI/2)
+        b1.vx =
+          v2 * Math.cos(theta2 - phi) * Math.cos(phi) +
+          v1 * Math.sin(theta1 - phi) * Math.cos(phi + Math.PI / 2)
+        b1.vy =
+          v2 * Math.cos(theta2 - phi) * Math.sin(phi) +
+          v1 * Math.sin(theta1 - phi) * Math.sin(phi + Math.PI / 2)
+        b2.vx =
+          v1 * Math.cos(theta1 - phi) * Math.cos(phi) +
+          v2 * Math.sin(theta2 - phi) * Math.cos(phi + Math.PI / 2)
+        b2.vy =
+          v1 * Math.cos(theta1 - phi) * Math.sin(phi) +
+          v2 * Math.sin(theta2 - phi) * Math.sin(phi + Math.PI / 2)
       }
     }
     wallCollision(b1)
