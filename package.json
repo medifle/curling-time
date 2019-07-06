@@ -9,7 +9,7 @@
   "author": "medifle",
   "license": "MIT",
   "dependencies": {
-    "ecstatic": "^3.3.0",
+    "ecstatic": "^3.3.2",
     "socket.io": "^2.1.1"
   }
 }
